@@ -1,33 +1,64 @@
 # Bot de Trading · V0.1
 
-**Versión:** 0.1.0  
-**Fecha de revisión:** 17 de noviembre de 2026  
-**Asignatura:** Ciencia de datos aplicada a la economía  
-**Estado:** prototipo de interfaz y backend preliminar; sin órdenes reales.
+Prototipo de bot de trading con interfaz en **Vue 3**, API en **FastAPI** y simulación **Paper** para BTCUSDT. Incluye un modo de demostración independiente del backend y un ciclo experimental de consulta de mercado, propuesta de decisión, control de riesgo y registro de operaciones simuladas.
 
-## Objetivo y alcance
+**Versión:** 0.1.0
 
-Esta primera versión presenta la interfaz del bot de trading, su estructura de comunicación y controles iniciales. Se toma como referencia la pizarra del 17 de noviembre: entrega V0.1, repositorio público, versión y tecnologías en el README, uso de un LLM local y protección de las credenciales.
+## Estado del proyecto
 
-La interfaz utiliza **Vue 3, TypeScript y Vite**, tecnologías recomendadas en la pizarra. Se eligió **MEXC** entre las plataformas mencionadas. El protocolo PDF especifica React para el proyecto final; esta V0.1 conserva la recomendación de Vue de la actividad presencial. La decisión tecnológica para la entrega final queda sujeta al criterio de evaluación de esa etapa.
+La interfaz compila correctamente y la conexión con la API ha sido verificada. El backend consulta datos públicos de MEXC y dispone de un adaptador preliminar para Ollama local. La integración de la API privada del LLM y del modelo predictivo con su escalador sigue pendiente.
 
-El modo demostración funciona sin backend y muestra datos ficticios identificados. El backend contiene un ciclo experimental de consulta, validación, propuesta y registro Paper. El pronóstico es una **referencia igual a cero**, sin modelo entrenado conectado. La API privada del profesor está pendiente de recepción e integración; no se supone que tenga el mismo contrato que el adaptador actual de Ollama.
+El pronóstico actual utiliza una referencia de rendimiento igual a cero. El proyecto no envía órdenes reales ni realiza retiros. La simulación utiliza el último cierre conocido como precio de referencia; sus resultados no constituyen un backtest ni una medición de rentabilidad.
 
-## Tecnologías aplicadas
+## Tecnologías
 
-| Componente | Tecnología y alcance |
+| Componente | Tecnología |
 |---|---|
 | Interfaz | Vue 3, TypeScript y Vite |
 | Backend | Python, FastAPI y httpx |
-| Persistencia | SQLite; estado por símbolo y decisiones por símbolo/vela |
-| Mercado | API pública de velas diarias de MEXC |
-| LLM | Adaptador preliminar para Ollama local |
-| Pronóstico | Referencia cero; integración del modelo y escalador pendiente |
-| Verificación | unittest y pruebas aisladas con Node.js |
+| Persistencia | SQLite |
+| Datos de mercado | API pública de velas diarias de MEXC |
+| LLM experimental | Ollama local, modelo `llama3.2` |
+| Pruebas | unittest y ejecutor de pruebas de Node.js |
 
-Las dependencias declaradas conservan las familias de versiones del prototipo original. Su instalación completa, auditoría y bloqueo reproducible de versiones están pendientes; no se declara una revisión de vulnerabilidades aprobada.
+## Funcionalidades
 
-## Estructura
+- Visualización del activo, la conexión y el estado de ejecución.
+- Consulta de efectivo, posición y patrimonio en USDT para BTCUSDT.
+- Última vela, rendimiento diario, distancia a SMA20 y volatilidad de 20 rendimientos.
+- Presentación separada del pronóstico de referencia, la propuesta del LLM, la acción final y el motivo del control de riesgo.
+- Historial de decisiones y mensajes de error.
+- Controles para iniciar, pausar y detener el ciclo.
+- Demostración con datos ficticios, sin solicitudes al backend.
+
+Las fechas se muestran en UTC. Si se pierde la conexión, la interfaz conserva la última lectura y la marca como no confirmada. Cambiar al modo demostración o cerrar la página no detiene el backend.
+
+## Arquitectura
+
+```text
+Vue 3 + TypeScript
+        |
+        v
+FastAPI — autenticación del operador
+        |
+        v
+MEXC — velas diarias, validación e indicadores
+        |
+        v
+Pronóstico de referencia → Ollama local → validación de JSON
+                                              |
+                                              v
+                                     Reglas de riesgo
+                                              |
+                                              v
+                                     Registro Paper → SQLite
+```
+
+El LLM propone una acción; las reglas de saldo, posición y riesgo se aplican en Python. La respuesta JSON debe incluir acción, símbolo, fecha de vela y una justificación breve. El símbolo y la fecha deben coincidir con la consulta.
+
+SQLite conserva el estado por símbolo y las decisiones por símbolo y vela. El backend admite un único proceso.
+
+## Estructura del repositorio
 
 ```text
 bot-trading-v0.1/
@@ -41,73 +72,27 @@ bot-trading-v0.1/
 │   ├── tests/
 │   ├── index.html
 │   ├── package.json
+│   ├── package-lock.json
 │   ├── tsconfig.json
 │   └── vite.config.ts
 ├── docs/
-│   ├── REVISION_V0.1.md
-│   └── VERIFICACION.md
 ├── .env.example
 ├── .gitignore
 └── README.md
 ```
 
-## Interfaz
+## Requisitos
 
-- Activo, estado de conexión y estado de ejecución.
-- Efectivo, posición y patrimonio expresado en USDT para BTCUSDT.
-- Última vela, rendimiento diario, distancia a SMA20 y volatilidad de 20 rendimientos.
-- Pronóstico identificado como referencia cero.
-- Propuesta del LLM, acción final y motivo del control de riesgo por separado.
-- Historial de decisiones y mensajes de error.
-- Controles de inicio, pausa y detención.
-- Modo demostración explícito, sin solicitudes al backend.
+- Python 3.10 o posterior.
+- Node.js 22.13 o posterior y npm.
+- Acceso a Internet para instalar dependencias y consultar MEXC.
+- Ollama con un modelo local para ejecutar el ciclo experimental con LLM.
 
-Una desconexión conserva la última lectura y marca el estado como no confirmado. No se reemplazan datos del servidor por ejemplos. Las fechas se muestran en UTC. Cambiar a demostración o cerrar la página no detiene el backend.
+La demostración de la interfaz no necesita backend, claves ni acceso a MEXC. Consultar el estado de la API tampoco requiere Ollama.
 
-## Arquitectura preliminar
+## Ejecución en Windows PowerShell
 
-```text
-Vue + TypeScript → FastAPI autenticado → MEXC → validación e indicadores
-                                             ↓
-                          referencia cero → Ollama local
-                                             ↓
-                         validación JSON → riesgo → registro Paper → SQLite
-```
-
-El LLM solo propone. Las reglas de saldo, posición y riesgo se ejecutan en Python. El contrato JSON exige acción, símbolo, fecha de vela y justificación breve. El símbolo y la fecha deben coincidir con la consulta.
-
-## Seguridad
-
-- `LLM_API_KEY` permanece en el backend. Solo se utiliza como cabecera hacia un gateway local compatible; no se incluye en el prompt ni en el frontend.
-- `OPERATOR_API_KEY` es una credencial distinta, destinada al acceso del operador. Protege tanto `/api/state` como los comandos. Se introduce en la interfaz y permanece temporalmente en memoria; no se guarda en `localStorage` ni `sessionStorage`.
-- `.env.example` contiene nombres y valores de configuración sin claves reales. La configuración local se guarda en `backend/.env`, excluido de Git.
-- El adaptador permite únicamente direcciones de bucle local y rechaza nombres de modelos que contengan `cloud`. Estos filtros no sustituyen la verificación de que el servicio y el modelo ejecutan inferencia local.
-- Ollama local no exige autenticación por defecto. La existencia de una cabecera `Authorization` no demuestra que el servicio valide la clave. El gateway privado y sus pruebas quedan pendientes de integración.
-- No existen llamadas a endpoints de órdenes reales, retiros o negociación autenticada de MEXC.
-- Los eventos no almacenan cabeceras, claves ni respuestas completas de servicios externos.
-
-El prototipo se ejecuta únicamente en el equipo local. Un despliegue accesible por red requiere revisar autenticación, HTTPS y control de acceso. Publicar el código en GitHub no equivale a desplegar los servicios.
-
-## Reglas y limitaciones de Paper
-
-El capital inicial es de **50,000 USDT** y el costo académico es **0.0%**, según la sección 15 del protocolo del agente. Estas cifras no representan una afirmación sobre tarifas vigentes de MEXC.
-
-- Sin apalancamiento, posiciones negativas ni compras por encima del efectivo.
-- `MAX_EXPOSURE` limita el importe de una nueva compra; no implementa rebalanceo continuo cuando cambia el precio.
-- La pérdida diaria se mide en UTC con la última valoración guardada al iniciar el día observado. El bloqueo se conserva durante ese día. La supervisión depende de las observaciones del ciclo; no es un control intradía continuo.
-- Pausar y detener invalidan el ciclo pendiente antes de registrar una operación. Detener no liquida la posición.
-- Decisión y estado se guardan en una misma transacción. Al reiniciar se recuperan efectivo, posición, valoración, último registro y base diaria, con el bot detenido.
-- Cada símbolo y vela puede registrarse una sola vez. Se admite un único proceso del backend.
-
-La simulación conserva un **precio de referencia correspondiente al último cierre conocido**. Se registra por separado la fecha de la vela y la fecha de la decisión. No se interpreta ese cierre pasado como un precio de ejecución disponible tras consultar al LLM. La ejecución temporalmente válida, mínimos, precisión del par, deslizamiento y registro detallado de órdenes quedan pendientes. El patrimonio del prototipo no constituye evidencia de rentabilidad ni un backtest válido.
-
-La base nueva se llama `backend/bot-v01.db`; no migra automáticamente una base `bot.db` del prototipo anterior. El historial anterior no forma parte de este paquete.
-
-## Ejecución local
-
-Requisitos: Python 3.10 o posterior, Node.js 22.13 o posterior y npm. Ollama solo es necesario para probar el ciclo experimental. La demostración de interfaz no necesita claves ni acceso a MEXC.
-
-### Interfaz de demostración
+### 1. Iniciar la interfaz
 
 Desde la raíz del proyecto:
 
@@ -117,9 +102,9 @@ npm install
 npm run dev
 ```
 
-Dirección local: `http://127.0.0.1:5173`. La aplicación inicia en demostración. Los botones cambian únicamente el estado visual y mantienen fijos los datos de ejemplo.
+Abre `http://127.0.0.1:5173`. La aplicación inicia en modo demostración: los controles modifican el estado visual y los datos de ejemplo permanecen fijos.
 
-### Backend en Windows PowerShell
+### 2. Preparar el backend
 
 En otra terminal, desde la raíz del proyecto:
 
@@ -130,95 +115,105 @@ python -m venv .venv
 Copy-Item ..\.env.example .env
 ```
 
-Antes de iniciar el backend, `backend/.env` requiere una credencial propia en `OPERATOR_API_KEY`. Una cadena aleatoria puede generarse localmente con:
+Copia la plantilla solo durante la configuración inicial para conservar los valores de un archivo `.env` existente.
+
+Genera una clave de operador:
 
 ```powershell
 .\.venv\Scripts\python.exe -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
 
-Ese valor se utiliza únicamente para el acceso del operador. `LLM_API_KEY` permanece vacío mientras no exista un gateway configurado que lo requiera. La credencial privada del LLM no se introduce en la interfaz.
+Guarda el valor generado en `OPERATOR_API_KEY` dentro de `backend/.env`. Mantén `LLM_API_KEY` vacío salvo que utilices un gateway local que lo requiera.
+
+### 3. Iniciar la API y conectar la interfaz
+
+Desde `backend`:
 
 ```powershell
 .\.venv\Scripts\python.exe -m uvicorn main:app --host 127.0.0.1 --port 8000 --workers 1
 ```
 
-La interfaz permite introducir la credencial del operador y seleccionar **Conectar**. El backend inicia detenido. La consulta del estado no necesita Ollama; **Iniciar** activa el ciclo experimental y sí necesita las dependencias externas disponibles.
+En la interfaz, introduce la clave de operador y selecciona **Conectar**. El backend inicia detenido. El botón **Iniciar** activa el ciclo experimental y requiere que los servicios de mercado y LLM estén disponibles.
 
-### Backend en macOS o Linux
+Durante el desarrollo, Vite redirige las solicitudes a `/api` hacia el backend local.
 
-Desde la raíz del proyecto:
+### 4. Preparar Ollama para el ciclo experimental
 
-```bash
-cd backend
-python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
-cp ../.env.example .env
-```
+Con Ollama instalado:
 
-Después de configurar `backend/.env`:
-
-```bash
-.venv/bin/python -m uvicorn main:app --host 127.0.0.1 --port 8000 --workers 1
-```
-
-### Ollama local, integración experimental
-
-El adaptador utiliza el modelo `llama3.2` y el contrato `/api/chat`. La preparación local, con Ollama instalado, contempla:
-
-```text
+```powershell
 ollama pull llama3.2
 ollama serve
 ```
 
-`ollama serve` solo es necesario cuando el servicio no está iniciado. El modelo descargado debe ejecutar inferencia local. La evidencia de modelo, versión, hardware y latencia está pendiente. Una API posterior con otro formato requiere adaptar y probar el conector.
+Ejecuta `ollama serve` solo si el servicio no está iniciado. El adaptador utiliza el contrato `/api/chat` y requiere inferencia local. La futura API privada necesitará su propia adaptación y pruebas de integración.
 
-## API del backend
+## Claves y seguridad
 
-| Método y ruta | Función | Acceso |
+- **`OPERATOR_API_KEY`** protege la consulta de estado y los comandos del bot. Se introduce en la interfaz y se conserva temporalmente en memoria, sin usar `localStorage` ni `sessionStorage`.
+- **`LLM_API_KEY`** es una credencial independiente. Permanece en el backend y solo se envía como cabecera a un gateway local compatible; nunca se introduce en la interfaz ni en el prompt.
+- La configuración local se guarda en `backend/.env`, excluido de Git. `.env.example` debe contener únicamente valores de ejemplo, sin credenciales reales.
+- El adaptador acepta direcciones de bucle local y rechaza nombres de modelos que contengan `cloud`. Debe utilizarse con un servicio y un modelo que ejecuten inferencia local.
+- Ollama local no exige autenticación por defecto. Si se utiliza un gateway, este debe validar la credencial configurada.
+- Los eventos no guardan claves, cabeceras ni respuestas completas de servicios externos.
+
+La configuración está orientada al uso local. Para exponer los servicios por red se requiere configurar HTTPS y revisar los controles de acceso. Si una clave se comparte por error, debe sustituirse.
+
+## Simulación Paper
+
+El capital inicial es de **50,000 USDT** y el costo configurado para la simulación es de **0.0%**.
+
+- No se admite apalancamiento, posiciones negativas ni compras superiores al efectivo disponible.
+- `MAX_EXPOSURE` limita el importe de una nueva compra; no realiza rebalanceo continuo.
+- La pérdida diaria se mide en UTC a partir de la última valoración guardada al comenzar el día observado. El bloqueo se mantiene durante ese día y se evalúa en cada ciclo.
+- Pausar o detener invalida el ciclo pendiente antes de registrar una operación. Detener no liquida la posición.
+- La decisión y el estado se guardan en una misma transacción. Al reiniciar se recupera el estado persistido y el bot permanece detenido.
+- Cada combinación de símbolo y vela puede registrarse una sola vez.
+
+Se guardan por separado la fecha de la vela y la fecha de la decisión. Quedan pendientes la ejecución posterior a la señal, los mínimos y la precisión del par, el deslizamiento y el registro detallado de órdenes.
+
+La base de datos se crea en `backend/bot-v01.db`. No hay migración automática desde una base anterior llamada `bot.db`.
+
+## API
+
+Todas las rutas siguientes requieren la cabecera `X-API-Key` con la clave del operador.
+
+| Método | Ruta | Función |
 |---|---|---|
-| `GET /api/state` | Estado y últimos registros | `X-API-Key` del operador |
-| `POST /api/start` | Activación del ciclo | `X-API-Key` del operador |
-| `POST /api/pause` | Pausa e invalidación del ciclo pendiente | `X-API-Key` del operador |
-| `POST /api/stop` | Detención sin liquidación | `X-API-Key` del operador |
+| `GET` | `/api/state` | Consultar el estado y los últimos registros |
+| `POST` | `/api/start` | Activar el ciclo experimental |
+| `POST` | `/api/pause` | Pausar e invalidar el ciclo pendiente |
+| `POST` | `/api/stop` | Detener sin liquidar la posición |
 
-La descripción automática de las rutas se encuentra en `http://127.0.0.1:8000/docs`. La API rechaza claves vacías o incorrectas con HTTP 401. El proxy de Vite conecta `/api` con el backend local durante el desarrollo; no constituye configuración de producción. GitHub Pages por sí solo no ejecuta FastAPI ni Ollama.
+Las claves vacías o incorrectas reciben una respuesta HTTP 401. Con el backend en ejecución, la documentación interactiva está disponible en `http://127.0.0.1:8000/docs`.
 
-## Verificación
+## Pruebas y compilación
 
-Desde `backend`:
+Para ejecutar las pruebas del backend, desde `backend` y con las dependencias instaladas:
 
-```text
-python -m unittest discover -s tests -v
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-Las pruebas de API requieren las dependencias instaladas; de lo contrario se identifican como omitidas. Las pruebas de reglas usan la biblioteca estándar.
+Las pruebas de reglas utilizan la biblioteca estándar de Python. Las pruebas de API necesitan las dependencias del backend; si faltan, se omiten.
 
-Desde `frontend`:
+Para ejecutar las pruebas de lógica y compilar la interfaz, desde `frontend`:
 
-```text
+```powershell
 node --test tests/logic.test.mjs
 npm run build
 ```
 
-Las pruebas aisladas de interfaz usan dobles de las funciones reactivas y de red; no montan componentes Vue. La compilación y la inspección visual se verifican por separado.
+Las pruebas de lógica utilizan funciones reactivas y solicitudes de red simuladas; no montan componentes Vue. La compilación genera los archivos de la interfaz en `frontend/dist`.
 
-Los resultados de esta revisión y las limitaciones del entorno están en [docs/VERIFICACION.md](docs/VERIFICACION.md). El análisis de requisitos y correcciones se encuentra en [docs/REVISION_V0.1.md](docs/REVISION_V0.1.md).
+## Próximos pasos
 
-## Pendientes de la siguiente versión
+- Integrar la API privada del LLM y validar su contrato, manteniendo inferencia local y credenciales fuera del prompt.
+- Incorporar el modelo predictivo y su escalador, con versiones y variables de entrada definidas.
+- Completar el motor Paper con ejecución posterior a la señal, precisión, mínimos, costos y deslizamiento.
+- Ampliar el registro de órdenes y las pruebas de integración de mercado, LLM y controles de riesgo.
+- Registrar ciclos completos y comparar el modelo sin LLM, el agente con LLM y la estrategia de comprar y mantener con métricas equivalentes.
 
-1. Integración y pruebas de la API privada del profesor, manteniendo inferencia local y credenciales fuera del prompt.
-2. Carga del modelo predictivo y escalador aprobados, con versiones y contrato de variables.
-3. Motor Paper con ejecución posterior a la señal, precisión, mínimos y deslizamiento documentados.
-4. Registro de órdenes y costos, bitácora completa y pruebas de los nueve escenarios del protocolo.
-5. Evidencia de 20 ciclos válidos, separando replay de conexión actual.
-6. Comparación modelo sin LLM, agente con LLM y comprar y mantener, con métricas equivalentes.
-7. Compilación y revisión visual completas, pruebas de integración, auditoría de dependencias y archivos de bloqueo.
-8. Publicación del repositorio y registro de su URL y commit de entrega.
+## Despliegue
 
-## Referencias
-
-- Pizarra de la actividad del 17 de noviembre de 2026.
-- Protocolo de Deep Learning para Finanzas, secciones 14, 15 y 16.
-- [MEXC: velas y datos de mercado](https://mexcdevelop.github.io/apidocs/spot_v3_en/#kline-candlestick-data).
-- [Ollama: autenticación](https://docs.ollama.com/api/authentication).
-- [Vite: opciones del servidor de desarrollo](https://vite.dev/config/server-options.html#server-proxy).
+La ejecución local requiere mantener activos el frontend y el backend; el ciclo experimental también necesita Ollama. La compilación del frontend puede servirse como contenido estático, pero requiere configurar el acceso a la API. GitHub Pages por sí solo no ejecuta FastAPI ni Ollama.
