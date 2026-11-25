@@ -1,30 +1,20 @@
-# Variables de entorno y credenciales
-.env
+dea.env
 .env.*
 !.env.example
-
-# Dependencias del frontend
-node_modules/
-dist/
-
-# Python
+*.db
+*.db-*
+*.sqlite*
+*.log
 __pycache__/
 *.py[cod]
 .venv/
 venv/
+node_modules/
+dist/
 .pytest_cache/
-
-# Bases de datos locales
-*.db
-*.db-journal
-*.db-shm
-*.db-wal
-
-# Archivos temporales
-*.log
 .DS_Store
-Thumbs.db
 
-# Archivos de configuración local
-.vscode/
-.idea/
+# Credenciales locales
+.env
+.env.*
+!.env.example

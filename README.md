@@ -1,112 +1,29 @@
-# Bot de Trading · V0.1
+# Bot de Trading · V0.2
 
-Prototipo de bot de trading con interfaz en **Vue 3**, API en **FastAPI** y simulación **Paper** para BTCUSDT. Incluye un modo de demostración independiente del backend y un ciclo experimental de consulta de mercado, propuesta de decisión, control de riesgo y registro de operaciones simuladas.
+Dashboard Vue 3 + TypeScript + Vite, con FastAPI y SQLite. Consulta datos públicos BTC/USDT de MEXC y permite comprar y vender **solo con dinero ficticio**. Capital inicial: **50,000 USDT**, una sola cuenta local persistente.
 
-**Versión:** 0.1.0
+## Funciones
 
-## Estado del proyecto
+- Precio público y últimas 60 velas de un minuto; actualización del dashboard cada 5 segundos.
+- Compra por importe USDT y venta por cantidad BTC. Saldo, posición y patrimonio actualizados.
+- Historial persistente: fecha UTC, precio consultado, cantidad, importe, saldos y valoración al operar.
+- Todas las rutas `/api/*` requieren `X-API-Key`, usando `OPERATOR_API_KEY` del backend.
+- La credencial del operador permanece en memoria del navegador. No se envía a MEXC.
+- Sin órdenes reales, claves privadas MEXC, LLM ni servicio Ollama.
 
-La interfaz compila correctamente y la conexión con la API ha sido verificada. El backend consulta datos públicos de MEXC y dispone de un adaptador preliminar para Ollama local. La integración de la API privada del LLM y del modelo predictivo con su escalador sigue pendiente.
+## Qué se conserva de V0.1
 
-El pronóstico actual utiliza una referencia de rendimiento igual a cero. El proyecto no envía órdenes reales ni realiza retiros. La simulación utiliza el último cierre conocido como precio de referencia; sus resultados no constituyen un backtest ni una medición de rentabilidad.
+Se conservan Vue, TypeScript, Vite, FastAPI, SQLite, la paleta oscura, tarjetas de saldos, panel del operador e historial. Los controles del ciclo automático se sustituyen por compras y ventas manuales. El código anterior de la interfaz y del servidor queda en `frontend/legacy_v01` y `backend/legacy_v01`, como referencia sin ejecución automática. `backend/core.py` y sus pruebas anteriores se conservan.
 
-## Tecnologías
+Los documentos anteriores en `docs` describen V0.1. Este README y `docs/VERIFICACION_V02.md` describen V0.2. Los límites experimentales de exposición y pérdida diaria del ciclo antiguo **no se aplican a las operaciones manuales V0.2**: estas controlan saldo disponible, posición, precisión y precio reciente.
 
-| Componente | Tecnología |
-|---|---|
-| Interfaz | Vue 3, TypeScript y Vite |
-| Backend | Python, FastAPI y httpx |
-| Persistencia | SQLite |
-| Datos de mercado | API pública de velas diarias de MEXC |
-| LLM experimental | Ollama local, modelo `llama3.2` |
-| Pruebas | unittest y ejecutor de pruebas de Node.js |
+La base nueva `backend/bot-v02.db` inicia una sola vez en 50,000 USDT y no reinicia el saldo al recargar. No migra ni sobrescribe `bot-v01.db`. No se incluyen bases personales, credenciales, entornos instalados ni historial `.git` en el paquete.
 
-## Funcionalidades
+## Instalar en Windows
 
-- Visualización del activo, la conexión y el estado de ejecución.
-- Consulta de efectivo, posición y patrimonio en USDT para BTCUSDT.
-- Última vela, rendimiento diario, distancia a SMA20 y volatilidad de 20 rendimientos.
-- Presentación separada del pronóstico de referencia, la propuesta del LLM, la acción final y el motivo del control de riesgo.
-- Historial de decisiones y mensajes de error.
-- Controles para iniciar, pausar y detener el ciclo.
-- Demostración con datos ficticios, sin solicitudes al backend.
+Coloca esta carpeta como `bot-trading\bot-trading-v0.2`, junto a V0.1. No necesitas sustituir ni borrar V0.1. Requisitos: Python 3.10+ y Node.js **22.18+** (para ejecutar las pruebas TypeScript directamente con Node).
 
-Las fechas se muestran en UTC. Si se pierde la conexión, la interfaz conserva la última lectura y la marca como no confirmada. Cambiar al modo demostración o cerrar la página no detiene el backend.
-
-## Arquitectura
-
-```text
-Vue 3 + TypeScript
-        |
-        v
-FastAPI — autenticación del operador
-        |
-        v
-MEXC — velas diarias, validación e indicadores
-        |
-        v
-Pronóstico de referencia → Ollama local → validación de JSON
-                                              |
-                                              v
-                                     Reglas de riesgo
-                                              |
-                                              v
-                                     Registro Paper → SQLite
-```
-
-El LLM propone una acción; las reglas de saldo, posición y riesgo se aplican en Python. La respuesta JSON debe incluir acción, símbolo, fecha de vela y una justificación breve. El símbolo y la fecha deben coincidir con la consulta.
-
-SQLite conserva el estado por símbolo y las decisiones por símbolo y vela. El backend admite un único proceso.
-
-## Estructura del repositorio
-
-```text
-bot-trading-v0.1/
-├── backend/
-│   ├── core.py
-│   ├── main.py
-│   ├── requirements.txt
-│   └── tests/
-├── frontend/
-│   ├── src/
-│   ├── tests/
-│   ├── index.html
-│   ├── package.json
-│   ├── package-lock.json
-│   ├── tsconfig.json
-│   └── vite.config.ts
-├── docs/
-├── .env.example
-├── .gitignore
-└── README.md
-```
-
-## Requisitos
-
-- Python 3.10 o posterior.
-- Node.js 22.13 o posterior y npm.
-- Acceso a Internet para instalar dependencias y consultar MEXC.
-- Ollama con un modelo local para ejecutar el ciclo experimental con LLM.
-
-La demostración de la interfaz no necesita backend, claves ni acceso a MEXC. Consultar el estado de la API tampoco requiere Ollama.
-
-## Ejecución en Windows PowerShell
-
-### 1. Iniciar la interfaz
-
-Desde la raíz del proyecto:
-
-```powershell
-cd frontend
-npm install
-npm run dev
-```
-
-Abre `http://127.0.0.1:5173`. La aplicación inicia en modo demostración: los controles modifican el estado visual y los datos de ejemplo permanecen fijos.
-
-### 2. Preparar el backend
-
-En otra terminal, desde la raíz del proyecto:
+Abre PowerShell en `bot-trading-v0.2`:
 
 ```powershell
 cd backend
@@ -115,105 +32,112 @@ python -m venv .venv
 Copy-Item ..\.env.example .env
 ```
 
-Copia la plantilla solo durante la configuración inicial para conservar los valores de un archivo `.env` existente.
-
-Genera una clave de operador:
+Genera una clave propia sin mostrarla en la terminal (solo la primera vez; no sobrescribas un `.env` ya configurado):
 
 ```powershell
-.\.venv\Scripts\python.exe -c "import secrets; print(secrets.token_urlsafe(32))"
+.\.venv\Scripts\python.exe -c "from pathlib import Path; import secrets; p=Path('.env'); assert 'OPERATOR_API_KEY=\n' in p.read_text(); p.write_text(p.read_text().replace('OPERATOR_API_KEY=\n', 'OPERATOR_API_KEY='+secrets.token_urlsafe(32)+'\n'))"
 ```
 
-Guarda el valor generado en `OPERATOR_API_KEY` dentro de `backend/.env`. Mantén `LLM_API_KEY` vacío salvo que utilices un gateway local que lo requiera.
+Abre `backend/.env` localmente y copia su clave al campo de operador de la interfaz. No la compartas ni la guardes en el código. El servidor no inicia con una clave vacía o menor de 24 caracteres.
 
-### 3. Iniciar la API y conectar la interfaz
-
-Desde `backend`:
+Desde `backend`, inicia el servidor:
 
 ```powershell
 .\.venv\Scripts\python.exe -m uvicorn main:app --host 127.0.0.1 --port 8000 --workers 1
 ```
 
-En la interfaz, introduce la clave de operador y selecciona **Conectar**. El backend inicia detenido. El botón **Iniciar** activa el ciclo experimental y requiere que los servicios de mercado y LLM estén disponibles.
-
-Durante el desarrollo, Vite redirige las solicitudes a `/api` hacia el backend local.
-
-### 4. Preparar Ollama para el ciclo experimental
-
-Con Ollama instalado:
+En otra terminal, desde `bot-trading-v0.2`:
 
 ```powershell
-ollama pull llama3.2
-ollama serve
+cd frontend
+npm ci
+npm run dev -- --host 127.0.0.1
 ```
 
-Ejecuta `ollama serve` solo si el servicio no está iniciado. El adaptador utiliza el contrato `/api/chat` y requiere inferencia local. La futura API privada necesitará su propia adaptación y pruebas de integración.
+Abre http://127.0.0.1:5173, introduce tu credencial y pulsa **Conectar**. Mantén ambas terminales abiertas. `Ctrl+C` detiene cada servicio. No hace falta activar el entorno Python ni modificar la política de PowerShell.
 
-## Claves y seguridad
+## Comprobar el funcionamiento
 
-- **`OPERATOR_API_KEY`** protege la consulta de estado y los comandos del bot. Se introduce en la interfaz y se conserva temporalmente en memoria, sin usar `localStorage` ni `sessionStorage`.
-- **`LLM_API_KEY`** es una credencial independiente. Permanece en el backend y solo se envía como cabecera a un gateway local compatible; nunca se introduce en la interfaz ni en el prompt.
-- La configuración local se guarda en `backend/.env`, excluido de Git. `.env.example` debe contener únicamente valores de ejemplo, sin credenciales reales.
-- El adaptador acepta direcciones de bucle local y rechaza nombres de modelos que contengan `cloud`. Debe utilizarse con un servicio y un modelo que ejecuten inferencia local.
-- Ollama local no exige autenticación por defecto. Si se utiliza un gateway, este debe validar la credencial configurada.
-- Los eventos no guardan claves, cabeceras ni respuestas completas de servicios externos.
+1. Conectar y comprobar cotización, fecha de consulta, velas y 50,000 USDT iniciales.
+2. Comprar 1,000 USDT ficticios. Debe reducirse efectivo y aparecer BTC e historial.
+3. Vender una cantidad menor o igual a la posición. El saldo USDT aumenta.
+4. Intentar comprar más saldo del disponible o vender más BTC: debe rechazarse sin modificar saldos.
+5. Reiniciar el backend: saldos e historial se conservan.
+6. Si falla MEXC, se bloquean operaciones y se muestra el error; nunca se sustituyen precios por datos inventados.
 
-La configuración está orientada al uso local. Para exponer los servicios por red se requiere configurar HTTPS y revisar los controles de acceso. Si una clave se comparte por error, debe sustituirse.
+El precio cambia entre consulta y operación. El backend obtiene una cotización nueva para cada operación. Si una respuesta se pierde, **Reintentar sin duplicar** reutiliza el mismo identificador. Antes de descartar una solicitud o recargar la página, revisa el historial: una operación podría haberse guardado aunque el navegador no recibiera la confirmación. Los identificadores pendientes no se guardan al recargar.
 
-## Simulación Paper
+## Pruebas
 
-El capital inicial es de **50,000 USDT** y el costo configurado para la simulación es de **0.0%**.
-
-- No se admite apalancamiento, posiciones negativas ni compras superiores al efectivo disponible.
-- `MAX_EXPOSURE` limita el importe de una nueva compra; no realiza rebalanceo continuo.
-- La pérdida diaria se mide en UTC a partir de la última valoración guardada al comenzar el día observado. El bloqueo se mantiene durante ese día y se evalúa en cada ciclo.
-- Pausar o detener invalida el ciclo pendiente antes de registrar una operación. Detener no liquida la posición.
-- La decisión y el estado se guardan en una misma transacción. Al reiniciar se recupera el estado persistido y el bot permanece detenido.
-- Cada combinación de símbolo y vela puede registrarse una sola vez.
-
-Se guardan por separado la fecha de la vela y la fecha de la decisión. Quedan pendientes la ejecución posterior a la señal, los mínimos y la precisión del par, el deslizamiento y el registro detallado de órdenes.
-
-La base de datos se crea en `backend/bot-v01.db`. No hay migración automática desde una base anterior llamada `bot.db`.
-
-## API
-
-Todas las rutas siguientes requieren la cabecera `X-API-Key` con la clave del operador.
-
-| Método | Ruta | Función |
-|---|---|---|
-| `GET` | `/api/state` | Consultar el estado y los últimos registros |
-| `POST` | `/api/start` | Activar el ciclo experimental |
-| `POST` | `/api/pause` | Pausar e invalidar el ciclo pendiente |
-| `POST` | `/api/stop` | Detener sin liquidar la posición |
-
-Las claves vacías o incorrectas reciben una respuesta HTTP 401. Con el backend en ejecución, la documentación interactiva está disponible en `http://127.0.0.1:8000/docs`.
-
-## Pruebas y compilación
-
-Para ejecutar las pruebas del backend, desde `backend` y con las dependencias instaladas:
+Desde `backend`:
 
 ```powershell
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-Las pruebas de reglas utilizan la biblioteca estándar de Python. Las pruebas de API necesitan las dependencias del backend; si faltan, se omiten.
-
-Para ejecutar las pruebas de lógica y compilar la interfaz, desde `frontend`:
+Desde `frontend`:
 
 ```powershell
-node --test tests/logic.test.mjs
+npm test
 npm run build
 ```
 
-Las pruebas de lógica utilizan funciones reactivas y solicitudes de red simuladas; no montan componentes Vue. La compilación genera los archivos de la interfaz en `frontend/dist`.
+Las pruebas backend usan respuestas MEXC controladas y bases temporales; no alteran tu saldo. Las pruebas frontend cubren lógica de importes, vigencia y gráfica; no sustituyen una prueba de la interfaz en navegador. Resultados y limitaciones en `docs/VERIFICACION_V02.md`.
 
-## Próximos pasos
+## API
 
-- Integrar la API privada del LLM y validar su contrato, manteniendo inferencia local y credenciales fuera del prompt.
-- Incorporar el modelo predictivo y su escalador, con versiones y variables de entrada definidas.
-- Completar el motor Paper con ejecución posterior a la señal, precisión, mínimos, costos y deslizamiento.
-- Ampliar el registro de órdenes y las pruebas de integración de mercado, LLM y controles de riesgo.
-- Registrar ciclos completos y comparar el modelo sin LLM, el agente con LLM y la estrategia de comprar y mantener con métricas equivalentes.
+| Ruta | Función |
+|---|---|
+| `GET /api/state` | Saldo, posición, cotización, valoración y últimas 100 operaciones |
+| `GET /api/candles` | Últimas 60 velas públicas de 1 minuto |
+| `GET /api/history?limit=100&offset=0` | Historial paginado, hasta 500 filas por consulta |
+| `POST /api/trades` | Compra o venta simulada; campos `request_id` UUID, `side` buy/sell, `amount` texto decimal |
 
-## Despliegue
+En compra, `amount` indica USDT; en venta, BTC. No se acepta precio del cliente ni campos adicionales. Error 401: clave; 422: formato; 409: saldo, precisión, precio vencido o identificador reutilizado con contenido diferente; 503: mercado o persistencia no disponibles. `/docs` ofrece el esquema público de la API, sin saldos ni secretos.
 
-La ejecución local requiere mantener activos el frontend y el backend; el ciclo experimental también necesita Ollama. La compilación del frontend puede servirse como contenido estático, pero requiere configurar el acceso a la API. GitHub Pages por sí solo no ejecuta FastAPI ni Ollama.
+## Modelo de simulación y límites
+
+- Cálculos contables con Decimal; BTC hasta 8 decimales. Compra redondeada hacia abajo; solo se descuenta el importe realmente simulado y el sobrante queda en efectivo.
+- Sin comisión ni deslizamiento, sin mínimos de negociación reales del exchange y sin órdenes limitadas. No reproduce ejecución real ni garantiza rentabilidad.
+- Precio de referencia: ticker público consultado después de recibir la solicitud. Se exige un máximo de 10 segundos desde el inicio de esa consulta hasta la transacción SQLite. Timeout HTTP: 6 segundos.
+- El ticker público no incluye fecha de la última negociación: las fechas guardadas indican **consulta y recepción**, no una certificación de antigüedad de la operación bursátil. Las velas se validan por fechas y OHLC; la última puede estar abierta.
+- Saldo e historial se guardan en una misma transacción SQLite. Un UUID repetido con el mismo importe devuelve el registro original; con otro importe se rechaza. Usar un solo proceso de backend.
+- Si no existe precio válido, el servidor devuelve patrimonio `null`, conserva efectivo e historial y bloquea operaciones nuevas. La interfaz identifica la última lectura cuando pierde conexión.
+- Ejecución local en 127.0.0.1. GitHub almacena el código; GitHub Pages no ejecuta FastAPI/SQLite. Un despliegue en red requiere configuración adicional.
+
+## Publicar un commit en el mismo GitHub
+
+El paquete no trae `.git`. Para mantener el historial y V0.1 intacta, crea una copia de trabajo desde tu repositorio existente en una tercera carpeta. Desde `bot-trading`:
+
+```powershell
+git clone --no-hardlinks .\bot-trading-v0.1 .\bot-trading-publicacion-v0.2
+$repoUrl = git -C .\bot-trading-v0.1 remote get-url origin
+git -C .\bot-trading-publicacion-v0.2 remote set-url origin $repoUrl
+git -C .\bot-trading-publicacion-v0.2 switch -c version-v0.2
+robocopy .\bot-trading-v0.2 .\bot-trading-publicacion-v0.2 /E /XD node_modules .venv __pycache__ dist .git /XF .env *.db *.db-shm *.db-wal *.pyc
+cd bot-trading-publicacion-v0.2
+git status --short
+git add README.md .env.example .gitignore backend frontend docs
+git diff --cached --stat
+git diff --cached
+```
+
+Revisa que no haya claves ni bases. Vuelve a ejecutar pruebas y compilación allí antes de publicar. Si `git clone` o cualquier paso falla, detente y revisa el mensaje. En robocopy, códigos 0 a 7 normalmente indican éxito o diferencias; 8 o más indican error.
+
+```powershell
+git commit -m "V0.2: mercado MEXC y trading manual simulado"
+git push -u origin version-v0.2
+```
+
+En GitHub abre una solicitud de cambios de `version-v0.2` hacia tu rama principal. Así revisas la entrega antes de incorporarla. Opcionalmente, tras revisar el commit:
+
+```powershell
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+Estos comandos se proporcionan para que publiques la versión; no se ejecutó ningún commit ni push durante la preparación.
+
+## Referencia
+
+[Documentación oficial de MEXC Spot](https://mexcdevelop.github.io/apidocs/spot_v3_en/): endpoints públicos `GET /api/v3/ticker/price` y `GET /api/v3/klines`.
